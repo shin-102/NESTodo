@@ -27,7 +27,13 @@ const addTodoBtn = document.getElementById('addTodoBtn')
 async function showDashboard() {
     nav.style.display = 'block'
     header.style.display = 'flex'
-    main.style.display = 'flex'
+    // main.style.display = 'flex'
+    // main.style.flexDirection = 'column'
+    main.style.cssText = `
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    `
     authContent.style.display = 'none'
 
     await fetchTodos()
@@ -106,6 +112,8 @@ function renderTodos() {
     </div>
     `
     main.innerHTML = todoList
+    //console.log(typeof todos)
+    //console.log(Array.isArray(todos))
 }
 
 // showDashboard()
@@ -173,7 +181,8 @@ async function authenticate() {
             // show dashboard
             showDashboard()
         } else {
-            throw Error('❌ Failed to authenticate...')
+            const msg = data.message || '❌ Failed to authenticate...'
+            throw Error(msg)
         }
 
     } catch (err) {
@@ -197,10 +206,15 @@ function logout() {
 async function fetchTodos() {
     isLoading = true
     const response = await fetch(apiBase + 'todos', {
-        headers: { 'Authorization': token }
+        headers: { 'Authorization': 'Bearer ' + token }
     })
     const todosData = await response.json()
-    todos = todosData
+    if (Array.isArray(todosData)) {
+        todos = todosData
+    } else {
+        todos = []
+        // Optionally show error: textError.innerText = todosData.message || 'Failed to fetch todos'
+    }
     isLoading = false
     renderTodos()
 }
@@ -211,7 +225,7 @@ async function updateTodo(index) {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': token
+            'Authorization': 'Bearer ' + token
         },
         body: JSON.stringify({ task: todos.find(val => val.id === index).task, completed: 1 })
     })
@@ -223,7 +237,7 @@ async function deleteTodo(index) {
     await fetch(apiBase + 'todos' + '/' + index, {
         method: 'DELETE',
         headers: {
-            'Authorization': token
+            'Authorization': 'Bearer ' + token
         },
     })
     fetchTodos()
@@ -240,7 +254,7 @@ async function addTodo() {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': token
+            'Authorization': 'Bearer ' + token
         },
         body: JSON.stringify({ task })
     })
